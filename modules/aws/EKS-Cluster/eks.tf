@@ -32,7 +32,8 @@ resource "aws_eks_cluster" "eks_cluster" {
   }
 
   access_config {
-    authentication_mode = var.authentication_mode
+    authentication_mode                         = var.authentication_mode
+    bootstrap_cluster_creator_admin_permissions = var.bootstrap_cluster_creator_admin_permissions
   }
 
   dynamic "encryption_config" {

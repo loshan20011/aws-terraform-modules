@@ -67,7 +67,12 @@ variable "subnet_details" {
 variable "authentication_mode" {
   type        = string
   description = "EKS Cluster authentication mode"
-  default     = "API_AND_CONFIG_MAP"
+  default     = "CONFIG_MAP"
+}
+variable "bootstrap_cluster_creator_admin_permissions" {
+  type        = bool
+  description = "Whether or not to bootstrap the access config values to the cluster"
+  default     = false
 }
 variable "secret_encryption_cmk" {
   type        = string
