@@ -64,6 +64,11 @@ variable "subnet_details" {
   }))
   default = []
 }
+variable "authentication_mode" {
+  type        = string
+  description = "EKS Cluster authentication mode"
+  default     = "API_AND_CONFIG_MAP"
+}
 variable "secret_encryption_cmk" {
   type        = string
   description = "KMS Key ID for encrypting Kubernetes secrets"

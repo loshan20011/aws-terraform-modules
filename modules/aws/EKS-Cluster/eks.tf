@@ -31,6 +31,10 @@ resource "aws_eks_cluster" "eks_cluster" {
     security_group_ids      = length(var.security_group_ids) == 0 ? null : var.security_group_ids
   }
 
+  access_config {
+    authentication_mode = var.authentication_mode
+  }
+
   dynamic "encryption_config" {
     for_each = var.secret_encryption_cmk != null ? [1] : []
     content {
