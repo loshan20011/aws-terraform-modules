@@ -128,6 +128,11 @@ variable "enable_scaling_configuration" {
   type        = bool
   default     = false
 }
+variable "skip_final_snapshot" {
+  description = "Flag to skip final snapshot"
+  type        = bool
+  default     = false
+}
 variable "min_capacity" {
   description = "Minimum capacity for autoscaling"
   type        = number

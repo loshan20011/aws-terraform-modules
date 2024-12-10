@@ -119,3 +119,8 @@ variable "cluster_subnet_ids" {
   description = "Subnet IDs for the EKS Cluster"
   default     = []
 }
+variable "security_group_ids" {
+  type        = list(string)
+  description = "Security groupt IDs for the EKS Cluster"
+  default     = []
+}
