@@ -82,15 +82,13 @@ data "aws_iam_policy_document" "codepipeline_policy" {
   }
 }
 
-# Code build role
-resource "aws_iam_role" "codebuild_role" {
-  name               = join("-", [var.project, var.application, var.environment, var.region, "codebuild-iam-role"])
-  assume_role_policy = data.aws_iam_policy_document.codebuild_assume_role.json
+# EKS access role
+resource "aws_iam_role" "eks_access_role" {
+  name               = join("-", [var.project, var.application, var.environment, var.region, "eks-access-iam-role"])
+  assume_role_policy = data.aws_iam_policy_document.eks_access_assume_role.json
 }
 
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_policy_document" "codebuild_assume_role" {
+data "aws_iam_policy_document" "eks_access_assume_role" {
   statement {
     effect = "Allow"
     principals {
@@ -99,24 +97,15 @@ data "aws_iam_policy_document" "codebuild_assume_role" {
     }
     actions = ["sts:AssumeRole"]
   }
-
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
-  }
 }
 
-resource "aws_iam_role_policy" "codebuild_policy" {
-  name   = join("-", [var.project, var.application, var.environment, var.region, "codebuild-policy"])
-  role   = aws_iam_role.codebuild_role.id
-  policy = data.aws_iam_policy_document.codebuild_policy.json
+resource "aws_iam_role_policy" "eks_access_codebuild_policy" {
+  name   = join("-", [var.project, var.application, var.environment, var.region, "eks-access-policy"])
+  role   = aws_iam_role.eks_access_role.id
+  policy = data.aws_iam_policy_document.eks_access_policy.json
 }
 
-data "aws_iam_policy_document" "codebuild_policy" {
+data "aws_iam_policy_document" "eks_access_policy" {
   statement {
     effect    = "Allow"
     actions   = ["logs:CreateLogStream", "logs:PutLogEvents", "logs:CreateLogGroup"]
@@ -166,6 +155,32 @@ data "aws_iam_policy_document" "codebuild_policy" {
   }
 }
 
+# Code build role
+resource "aws_iam_role" "codebuild_role" {
+  name               = join("-", [var.project, var.application, var.environment, var.region, "codebuild-iam-role"])
+  assume_role_policy = data.aws_iam_policy_document.codebuild_assume_role.json
+}
+
+data "aws_iam_policy_document" "codebuild_assume_role" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["codebuild.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "AWS"
+      identifiers = [module.eks_access_role.arn]
+    }
+  }
+}
+
 # IAM Role for CodeDeploy
 resource "aws_iam_role" "codedeploy_role" {
   name               = join("-", [var.project, var.application, var.environment, var.region, "codedeploy-iam-role"])
@@ -187,63 +202,7 @@ data "aws_iam_policy_document" "codedeploy_assume_role" {
     actions = ["sts:AssumeRole"]
     principals {
       type        = "AWS"
-      identifiers = ["*"]
+      identifiers = [module.eks_access_role.arn]
     }
-  }
-}
-
-resource "aws_iam_role_policy" "codedeploy_policy" {
-  name   = join("-", [var.project, var.application, var.environment, var.region, "codedeploy-policy"])
-  role   = aws_iam_role.codedeploy_role.id
-  policy = data.aws_iam_policy_document.codedeploy_policy.json
-}
-
-data "aws_iam_policy_document" "codedeploy_policy" {
-  statement {
-    effect    = "Allow"
-    actions   = ["logs:CreateLogStream", "logs:PutLogEvents", "logs:CreateLogGroup"]
-    resources = ["arn:aws:logs:*:*:*"]
-  }
-
-  statement {
-    effect    = "Allow"
-    actions   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket"]
-    resources = ["*"]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "ec2:CreateNetworkInterface",
-      "ec2:DescribeDhcpOptions",
-      "ec2:DescribeNetworkInterfaces",
-      "ec2:DeleteNetworkInterface",
-      "ec2:DescribeSubnets",
-      "ec2:DescribeSecurityGroups",
-      "ec2:DescribeVpcs",
-      "ec2:CreateNetworkInterfacePermission"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "eks:DescribeCluster",
-      "eks:ListClusters",
-      "eks:DescribeNodegroup",
-      "eks:ListNodegroups",
-      "eks:DescribeFargateProfile",
-      "eks:ListFargateProfiles",
-      "eks:DescribeAddonVersions",
-      "eks:AccessKubernetesApi"
-    ]
-    resources = ["*"]
-  }
-
-  statement {
-    effect    = "Allow"
-    actions   = ["sts:AssumeRole"]
-    resources = ["*"]
   }
 }
