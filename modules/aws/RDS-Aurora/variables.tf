@@ -214,3 +214,8 @@ variable "kms_key_id" {
   description = "KMS key id"
   default     = null
 }
+variable "skip_final_snapshot" {
+  type        = bool
+  description = "Flag to skip final snapshot"
+  default     = false
+}
